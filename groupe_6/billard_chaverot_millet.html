@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        
+        <title> Projet WebGL (Billard) CHAVEROT MILLET</title>
+        
+        <!-- Babylon.js -->
+        <script src="http://www.babylonjs.com/hand.minified-1.2.js"></script>
+        <script src="http://www.babylonjs.com/cannon.js"></script>
+        <script src="http://www.babylonjs.com/oimo.js"></script>
+        <script src="http://cdn.babylonjs.com/2-4/babylon.js"></script>
+        
+        <style>
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+        
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+        </style>
+        
+    </head>
+    
+    <body>
+        <canvas id="renderCanvas"></canvas>
+        
+        <script>
+            var canvas = document.getElementById("renderCanvas");
+            
+            //Global Variable :
+            var engine = new BABYLON.Engine(canvas, true);
+            var scene = new BABYLON.Scene(engine);;
+            var camera;
+            var sphereWhite;
+            var spheres = [];
+            
+            
+            //Compute Camera Direction, the camera is an ArcRotateCamera looking at (0,0,0)
+            var computeCameraDirection = function(){
+                var vecResult = new BABYLON.Vector3(-Math.cos(camera.alpha),0,-Math.sin(camera.alpha));
+                vecResult.normalize();
+                return vecResult;
+            }
+        
+        //Functions initializing the spheres object and positions:
+        var initializeSpheresPosition = function () {
+            
+            sphereWhite.position.z = -6;
+            sphereWhite.position.x = 0;
+            
+            spheres[0].position.z = 3;
+            spheres[0].position.x = -0.9;
+            
+            spheres[1].position.z = 3;
+            spheres[1].position.x = -0.9 + 2*(0.6/2);
+            
+            spheres[2].position.z = 3;
+            spheres[2].position.x = -0.9 + 4*(0.6/2);
+            
+            spheres[3].position.z = 3;
+            spheres[3].position.x = -0.9 + 6*(0.6/2);
+            
+            spheres[4].position.z = 2.4;
+            spheres[4].position.x = -0.6;
+            
+            spheres[5].position.z = 2.4;
+            spheres[5].position.x = -0.6 + 2*(0.6/2);
+            
+            spheres[6].position.z = 2.4;
+            spheres[6].position.x = -0.6 + 4*(0.6/2);
+            
+            spheres[7].position.z = 1.8;
+            spheres[7].position.x = -0.3;
+            
+            spheres[8].position.z = 1.8;
+            spheres[8].position.x = -0.3 + 2*(0.6/2);
+            
+            spheres[9].position.z = 1.2;
+            spheres[9].position.x = 0;
+            
+            
+            sphereWhite.position.y = 0.6/2;
+            for (var index = 0; index < 10; index++) {
+                
+                spheres[index].position.y = 0.6/2;
+                
+            }
+            
+        }
+        
+        var initializeSpheres = function (state) {
+            
+            
+            // Create the white sphere. Params: name, subdivs, size, scene
+            sphereWhite = BABYLON.Mesh.CreateSphere("sphereWhite", 16, 0.6, scene);
+            
+            
+            // Physics
+            var state = sphereWhite.setPhysicsState(BABYLON.PhysicsEngine.SphereImpostor, { mass: 1, restitution: 0.9});
+            state.linearDamping = 0.2;
+            
+            //Create all the others spheres :
+            for (var index = 0; index < 10; index++) {
+                
+                var sphere = BABYLON.Mesh.CreateSphere("sphere", 16, 0.6, scene);
+                
+                //Physics
+                var state = sphere.setPhysicsState(BABYLON.PhysicsEngine.SphereImpostor, { mass: 1, restitution: 0.9});
+                state.linearDamping = 0.2;
+                
+                spheres.push(sphere);
+            }
+            
+            //Material for the  White Ball
+            var sphereMatWhite = new BABYLON.StandardMaterial("sphereWhite", scene);
+            sphereMatWhite.diffuseColor = new BABYLON.Color3(1, 1, 1);
+            sphereMatWhite.specularColor = new BABYLON.Color3(1, 1, 1);
+            sphereWhite.material = sphereMatWhite;
+            
+            //Material for the  Yellow Ball
+            var sphereMatJaune = new BABYLON.StandardMaterial("sphere", scene);
+            sphereMatJaune.diffuseColor = new BABYLON.Color3(1, 1, 0);
+            sphereMatJaune.specularColor = new BABYLON.Color3(1, 1, 0);
+            
+            //Material for the  Red Ball
+            var sphereMatRouge = new BABYLON.StandardMaterial("sphere", scene);
+            sphereMatRouge.diffuseColor = new BABYLON.Color3(1, 0, 0);
+            sphereMatRouge.specularColor = new BABYLON.Color3(1, 0, 0);
+            
+            //Adding the Material to the Spheres
+            spheres[0].material = sphereMatJaune;
+            spheres[1].material = sphereMatRouge;
+            spheres[2].material = sphereMatJaune;
+            spheres[3].material = sphereMatJaune;
+            spheres[4].material = sphereMatRouge;
+            spheres[5].material = sphereMatRouge;
+            spheres[6].material = sphereMatRouge;
+            spheres[7].material = sphereMatJaune;
+            spheres[8].material = sphereMatJaune;
+            spheres[9].material = sphereMatRouge;
+            
+            initializeSpheresPosition();
+            
+            // Animation white ball : On click, the ball will have a velocity following the camera axis
+            scene.onPointerDown = function (event, pickResult){
+                if (pickResult.hit && pickResult.pickedMesh.name === "sphereWhite"){
+                    var cameraDirection = computeCameraDirection();
+                    var vectorVelocity = new BABYLON.Vector3(20*cameraDirection.x,0,20*cameraDirection.z);
+                    sphereWhite.applyImpulse(vectorVelocity, sphereWhite.getAbsolutePosition());
+                }
+            }
+        }
+        
+        var resetSphereVelocity = function(){
+            
+            sphereWhite.physicsImpostor.setLinearVelocity( new BABYLON.Vector3( 0, 0, 0 ) );
+            sphereWhite.physicsImpostor.setAngularVelocity( new BABYLON.Vector3( 0, 0, 0 ) );
+            
+            for (var index = 0; index < 10; index++) {
+                spheres[index].physicsImpostor.setLinearVelocity( new BABYLON.Vector3( 0, 0, 0 ) );
+                spheres[index].physicsImpostor.setAngularVelocity( new BABYLON.Vector3( 0, 0, 0 ) );
+                
+            }
+            
+        }
+        
+        
+        //Function Creating the Pool Table :
+        var createPoolTable = function(){
+            
+            // Creation of the outlines of the billiard table
+            var boxSide = BABYLON.MeshBuilder.CreateBox("box", {height : 1, width : 1, depth : 17.7}, scene);
+            var boxFront = BABYLON.MeshBuilder.CreateBox("box", {height : 1, width : 11},scene);
+            
+            // Creation of the holes in the outlines - Constructive Solid Geometry (CSG) - A sphere will be substracted to the box
+            
+            var sphere = BABYLON.Mesh.CreateSphere("sphere",16,2,scene);
+            
+            boxSide.position = new BABYLON.Vector3(0, 0, 0);
+            sphere.position = new BABYLON.Vector3(0.5,0,0);
+            
+            var boxGCSG = BABYLON.CSG.FromMesh(boxSide);
+            var sCSG = BABYLON.CSG.FromMesh(sphere);
+            
+            var subCSG = boxGCSG.subtract(sCSG);
+            
+            sphere.position = new BABYLON.Vector3(0.5,0,16.7/2);
+            sCSG = BABYLON.CSG.FromMesh(sphere);
+            subCSG = subCSG.subtract(sCSG);
+            
+            sphere.position = new BABYLON.Vector3(0.5,0,-16.7/2);
+            sCSG = BABYLON.CSG.FromMesh(sphere);
+            subCSG = subCSG.subtract(sCSG);
+            
+            //We don't need it anymore
+            boxSide.dispose();
+            
+            boxFront.position = new BABYLON.Vector3(0, 0, 0);
+            sphere.position = new BABYLON.Vector3(-9/2,0,-0.5);
+            
+            var boxFrontCSG = BABYLON.CSG.FromMesh(boxFront);
+            
+            sCSG = BABYLON.CSG.FromMesh(sphere);
+            boxFrontCSG = boxFrontCSG.subtract(sCSG);
+            
+            sphere.position = new BABYLON.Vector3(9/2,0,-0.5);
+            sCSG = BABYLON.CSG.FromMesh(sphere);
+            boxFrontCSG = boxFrontCSG.subtract(sCSG);
+            
+            //Items not needed anymore
+            boxFront.dispose();
+            sphere.dispose();
+            
+            //Setting Up the Pool Sides Material
+            var materialPoolBound = new BABYLON.StandardMaterial("texture2",scene);
+            
+            materialPoolBound.diffuseColor = new BABYLON.Color3(158/255, 112/255, 66/255);
+            materialPoolBound.specularColor = new BABYLON.Color3(158/255, 112/255, 66/255);
+            materialPoolBound.aplha=1;
+            
+            // Creation of the floor of the billard table as a plane
+            var solBillard = BABYLON.MeshBuilder.CreatePlane("plane", {height : 16.7, width: 9}, scene);
+            
+            // Material of the floor
+            var materialSol = new BABYLON.StandardMaterial("texture1",scene);
+            materialSol.diffuseColor = new BABYLON.Color3(14/255, 200/255, 76/255);
+            materialSol.specularColor = new BABYLON.Color3(14/255, 200/255, 76/255);
+            materialSol.aplha=1;
+            solBillard.material = materialSol;
+            
+            //Cloning the sides of the pool (which are symetrics)
+            var boxBillardG = subCSG.toMesh("csg", materialPoolBound, scene);
+            var boxBillardD = boxBillardG.clone("index: " + 0);
+            var boxBillardF = boxFrontCSG.toMesh("csg", materialPoolBound, scene);
+            var boxBillardB = boxBillardF.clone("index: " + 0);
+            
+            // Positionning elements
+            solBillard.rotation.x = Math.PI/2;
+            
+            boxBillardG.position = new BABYLON.Vector3(-5, 0.5, 0);
+            
+            boxBillardD.rotation.y = Math.PI;
+            boxBillardD.position = new BABYLON.Vector3(5, 0.5, 0);
+            
+            boxBillardF.position = new BABYLON.Vector3(0, 0.5, 17.7/2);
+            
+            boxBillardB.rotation.x = Math.PI;
+            boxBillardB.position = new BABYLON.Vector3(0, 0.5, -17.7/2);
+            
+            //Physics
+            boxBillardG.setPhysicsState(BABYLON.PhysicsEngine.MeshImpostor, { mass: 0, restitution: 0.9});
+            boxBillardD.setPhysicsState(BABYLON.PhysicsEngine.MeshImpostor, { mass: 0, restitution: 0.9});
+            boxBillardB.setPhysicsState(BABYLON.PhysicsEngine.MeshImpostor, { mass: 0, restitution: 0.9});
+            boxBillardF.setPhysicsState(BABYLON.PhysicsEngine.MeshImpostor, { mass: 0, restitution: 0.9});
+            
+            solBillard.checkCollisions = true;
+            solBillard.setPhysicsState(BABYLON.PhysicsEngine.BoxImpostor, { mass: 0, restitution: 0.9});
+            
+            
+        }
+        
+        //Show Instruction in a 2D Canvas
+        var showInstruction = function (scene)
+        {
+            var text2D = "Pool Table ! \n\nUse the Mouse to move the Camera \nClick on the white ball to shoot \nThe ball will follow the camera axis \n\nSPACE : restart \n";
+            
+            var canvas = new BABYLON.ScreenSpaceCanvas2D( scene, {
+                                                         id: "canvas",
+                                                         size: new BABYLON.Size(400, 200),
+                                                         backgroundFill: "#4040408F",
+                                                         backgroundRoundRadius: 50,
+                                                         children: [ new BABYLON.Text2D( text2D, {
+                                                                                        id: "InstructionText",
+                                                                                        marginAlignment: "h: center, v:center",
+                                                                                        fontName: "15pt Arial" } )
+                                                                    ] } );
+                                                                    return canvas;
+        };
+        
+        //Key Event
+        var keyEvent = function( event )
+        {
+            switch( event.keyCode )
+            {
+                // Reset Sphere and Camera Position
+                case 32: //SPACE
+                initializeSpheresPosition();
+                camera.alpha = -Math.PI/2;
+                camera.beta = 1.0;
+                resetSphereVelocity();
+                break;
+            }
+        }
+        
+        
+        var createScene = function () {
+            
+            // This creates a basic Babylon Scene object
+            scene.enablePhysics();
+            
+            // Create a rotating camera
+            camera = new BABYLON.ArcRotateCamera("camera1", -Math.PI/2, 1.0, 20, new BABYLON.Vector3(0, 0, 0), scene);
+            camera.setTarget(new BABYLON.Vector3(0,0,0)); // This targets the camera to scene origin
+            camera.attachControl(canvas, true); // This attaches the camera to the canvas
+            
+            // Create a light
+            var light = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 1, 0), scene);
+            
+            // ************************************************************************************************
+            // CREATION OF THE POOL TABLE :
+            createPoolTable();
+            
+            // ************************************************************************************************
+            // CREATION OF ALL SPHERES :
+            initializeSpheres();
+            
+            showInstruction(scene);
+            
+            //Return the created scene
+            return scene;
+        }
+        
+        //Set up Key Event
+        document.onkeydown = keyEvent;
+        
+        var scene = createScene();
+        
+        engine.runRenderLoop(function () {
+                             scene.render();
+                             });
+                             
+                             // Resize when the user resize his windows
+                             window.addEventListener("resize", function () {
+                                                     engine.resize();
+                                                     });
+            </script>
+        
+    </body>
+    
+</html>
