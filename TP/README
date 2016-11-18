@@ -1,0 +1,3 @@
+Ajouter votre TP dans ce dossier sous la forme "nomeleve1_nomeleve2..."
+
+Dans le fichier index.html du dossier parent ajouter le lien vers votre projet avec comme url "./TP/nomeleve1_nomeleve2../index.html"
