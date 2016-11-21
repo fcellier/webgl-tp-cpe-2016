@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+        <title>Babylon.js sample code</title>
+        <!-- Babylon.js -->
+        <script src="http://www.babylonjs.com/hand.minified-1.2.js"></script>
+        <script src="http://www.babylonjs.com/cannon.js"></script>
+        <script src="http://www.babylonjs.com/oimo.js"></script>
+        <script src="http://www.babylonjs.com/babylon.js"></script>
+        <style>
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            #renderCanvas {
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+        </style>
+    </head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <script>
+        var canvas = document.getElementById("renderCanvas");
+        var engine = new BABYLON.Engine(canvas, true);
+        var key_pressed = 0; // 1 if left, 2 if right, 3 if up, 4 if down
+
+        var createScene = function () {
+        
+            // This creates a basic Babylon Scene object (non-mesh)
+            var scene = new BABYLON.Scene(engine);
+        
+            // This creates and positions a free camera (non-mesh)
+            //var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene);
+            var camera = new BABYLON.FollowCamera("FollowCam", new BABYLON.Vector3(0, 5, -10), scene);
+            // seconde camera 
+	   		// var cameraRotation = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene);        
+            // This targets the camera to scene origin
+            //camera.setTarget(BABYLON.Vector3.Zero());
+            
+        
+            // This attaches the camera to the canvas
+            camera.attachControl(canvas, true);
+        
+            // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
+            var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
+        
+            // Default intensity is 1. Let's dim the light a small amount
+            light.intensity = 0.7;
+        
+            // Our built-in 'sphere' shape. Params: name, subdivs, size, scene
+            var sphere = BABYLON.Mesh.CreateSphere("sphere", 10, 1, scene);
+            sphere.material = new BABYLON.StandardMaterial("matBaloon",scene);
+            // Move the sphere upward 1/2 its height
+            sphere.position.y = 1;
+            sphere.rotation.z = Math.PI/2; 
+            // Position de la boule au départ
+	    sphere.position.z=-9.5; 
+	    sphere.position.x=-8.5;
+            
+            // gestion de la caméra 
+            camera.target = sphere; // target any mesh or object with a "position" Vector3
+            camera.radius = 10; // how far from the object to follow
+	    	camera.heightOffset = 10; // how high above the object to place the camera
+	    	camera.rotationOffset = 180; // the viewing angle
+	    	camera.cameraAcceleration = 0.05 // how fast to move
+	   		camera.maxCameraSpeed = 10 // speed limit
+            scene.activeCamera = camera;
+        
+        
+        
+
+        
+        
+            // Our built-in 'ground' shape. Params: name, width, depth, subdivs, scene
+            //var ground = BABYLON.Mesh.CreateGround("ground1", 6, 6, 2, scene);
+
+            //Creation Maze
+                     var ground = BABYLON.Mesh.CreateGround("ground1", 25, 25, 2, scene);
+        	
+	        var box1 = BABYLON.Mesh.CreateBox("Box1", 2.0, scene);
+            box1.position = new BABYLON.Vector3(-11.5, 1, 0);
+            box1.scaling.z = 12.5;
+        
+            var box2 = BABYLON.Mesh.CreateBox("Box2", 2.0, scene);
+            box2.position = new BABYLON.Vector3(11.5, 1, 0);
+            box2.scaling.z = 12.5;
+        	
+            var box3 = BABYLON.Mesh.CreateBox("Box3", 2.0, scene);
+            box3.position = new BABYLON.Vector3(-1, 1, 11.5);
+            box3.scaling.x = 9.5;
+        	
+            var box4 = BABYLON.Mesh.CreateBox("Box4", 2.0, scene);
+            box4.position = new BABYLON.Vector3(0, 1, -11.5);
+            box4.scaling.x = 10.5;
+	
+	        var box5 = BABYLON.Mesh.CreateBox("Box5", 2.0, scene);
+            box5.position = new BABYLON.Vector3(-8.5, 1, -7);
+            box5.scaling.x = 2;
+	
+	        var box6 = BABYLON.Mesh.CreateBox("Box6", 2.0, scene);
+            box6.position = new BABYLON.Vector3(-7.5, 1, -3.5);
+            box6.scaling.z = 4;
+	
+	        var box7 = BABYLON.Mesh.CreateBox("Box7", 2.0, scene);
+            box7.position = new BABYLON.Vector3(-3, 1, -7.5);
+            box7.scaling.z = 3.5;
+	
+	        var box8 = BABYLON.Mesh.CreateBox("Box8", 2.0, scene);
+            box8.position = new BABYLON.Vector3(-0.5, 1, -0.5);
+            box8.scaling.x = 6;
+	
+	        var box9 = BABYLON.Mesh.CreateBox("Box9", 2.0, scene);
+            box9.position = new BABYLON.Vector3(1, 1, -5);
+            box9.scaling.z = 3.5;
+	
+	        var box10 = BABYLON.Mesh.CreateBox("Box10", 2.0, scene);
+            box10.position = new BABYLON.Vector3(7.5, 1, -7.5);
+            box10.scaling.x = 3.5;
+	
+	        var box11 = BABYLON.Mesh.CreateBox("Box11", 2.0, scene);
+            box11.position = new BABYLON.Vector3(5, 1, -2);
+            box11.scaling.z = 2.5;
+	
+	        var box12 = BABYLON.Mesh.CreateBox("Box12", 2.0, scene);
+            box12.position = new BABYLON.Vector3(5.5, 1, 4);
+            box12.scaling.x = 5.5;
+	
+	        var box13 = BABYLON.Mesh.CreateBox("Box13", 2.0, scene);
+            box13.position = new BABYLON.Vector3(-7, 1, 4);
+            box13.scaling.x = 5;
+	
+	        var box14 = BABYLON.Mesh.CreateBox("Box14", 2.0, scene);
+            box14.position = new BABYLON.Vector3(1, 1, 5.5);
+            box14.scaling.z = 2.5;
+	
+	        var box15 = BABYLON.Mesh.CreateBox("Box15", 2.0, scene);
+            box15.position = new BABYLON.Vector3(5, 1, 9);
+            box15.scaling.z = 2.5;
+	
+	        var box16 = BABYLON.Mesh.CreateBox("Box16", 2.0, scene);
+            box16.position = new BABYLON.Vector3(10, 1, -3.5);
+            box16.scaling.x = 2;
+	
+	        var box17 = BABYLON.Mesh.CreateBox("Box17", 2.0, scene);
+            box17.position = new BABYLON.Vector3(-3, 1, 9);
+            box17.scaling.z = 2;
+	
+	        var box18 = BABYLON.Mesh.CreateBox("Box18", 2.0, scene);
+            box18.position = new BABYLON.Vector3(-7.5, 1, 7);
+            box18.scaling.z = 2;
+        
+      
+        
+        	
+        	
+        	// choix des couleurs
+        	
+        	var materiau = new BABYLON.StandardMaterial("mat1", scene);
+        	//materiau.specularColor = new BABYLON.Color3 (0.9, 0,0);
+        	//materiau.diffuseColor = new BABYLON.Color3(0,0,0.9);
+        	materiau.specularPower = 50; // plus faible -> tendence metalique
+        	materiau.diffuseTexture=new BABYLON.Texture("buble_fond.jpeg",scene);
+			materiau.diffuseTexture.hasAlpha = true;
+        	sphere.material=materiau;
+        	
+			        
+			var time=30; 
+			var vitesseRotation=3; 
+			var vitesseTranslation=0.001;
+			
+			var keys={left:0,right:0, up:0, down:0};
+
+			window.addEventListener('keydown',function(event){ 
+			    if (event.keyCode==37){ 
+			      keys.left=1; 
+			    } 
+			    if (event.keyCode==39){ 
+			      keys.right=1; 
+			    } 
+			    if (event.keyCode==38){ 
+			      keys.up=1; 
+			    } 
+			    if (event.keyCode==40){ 
+			      keys.down=1; 
+			    } 
+			}); 
+          
+		    window.addEventListener('keyup',function(event){ 
+				  if (event.keyCode==37){ 
+				    keys.left=0; 
+				  } 
+				  if (event.keyCode==39){ 
+				    keys.right=0; 
+				  } 
+				  if (event.keyCode==38){ 
+				    keys.up=0; 
+				  } 
+				  if (event.keyCode==40){ 
+				    keys.down=0; 
+				  } 
+		 	}); 
+	 
+
+	        scene.gravity = new BABYLON.Vector3(0, -1, 0); 
+			camera.applyGravity = true;
+			camera.checkCollisions = true;
+	            
+	        //Animation    
+	        scene.registerBeforeRender(function(){
+
+		    	time=time+(1/engine.fps); 
+
+		    	//Enable Collisions
+				sphere.collisionsEnabled = true;
+				box1.collisionsEnabled = true;
+				box2.collisionsEnabled = true;
+				box3.collisionsEnabled = true;
+				box4.collisionsEnabled = true;
+				ground.collisionsEnabled = true;
+				camera.checkCollisions = true;
+
+				
+				//Sphere intersection -- Precise = true
+				/*
+				if(sphere.intersectsMesh(box3,false))
+				{
+					sphere.material.emissiveColor = new BABYLON.Color3(1,0,0);
+				}
+				else
+				{
+					sphere.material.emissiveColor = new BABYLON.Color3(1,1,1);
+				}*/
+
+				// Si pas de collisions, déplacement
+				if(!sphere.intersectsMesh(box1,false) &&
+				   !sphere.intersectsMesh(box2,false) &&
+				   !sphere.intersectsMesh(box3,false) &&
+				   !sphere.intersectsMesh(box4,false) &&
+				   !sphere.intersectsMesh(box5,false) &&
+				   !sphere.intersectsMesh(box6,false) &&
+				   !sphere.intersectsMesh(box7,false) &&
+				   !sphere.intersectsMesh(box8,false) &&
+				   !sphere.intersectsMesh(box9,false) &&
+				   !sphere.intersectsMesh(box10,false) &&
+				   !sphere.intersectsMesh(box11,false) &&
+				   !sphere.intersectsMesh(box12,false) &&
+				   !sphere.intersectsMesh(box13,false) &&
+				   !sphere.intersectsMesh(box14,false) &&
+				   !sphere.intersectsMesh(box15,false) &&
+				   !sphere.intersectsMesh(box16,false) &&
+				   !sphere.intersectsMesh(box17,false) &&
+				   !sphere.intersectsMesh(box18,false))
+				{
+					if (keys.left==1){ 
+					// on test l'angle de la caméra pour ne pas perturber les déplacements du joueur.
+						key_pressed = 1; 
+						if (camera.rotationOffset == 180)
+						{ 
+							sphere.rotation.z=vitesseRotation*time; 
+							sphere.position.x=-vitesseTranslation*time+sphere.position.x; 
+						} 
+						if (camera.rotationOffset == 90)
+						{ 
+							sphere.rotation.x=-vitesseRotation*time; 
+							sphere.position.z=-vitesseTranslation*time+sphere.position.z; 
+						} 
+						if (camera.rotationOffset == 270)
+						{ 
+							sphere.rotation.x=vitesseRotation*time; 
+							sphere.position.z=vitesseTranslation*time+sphere.position.z; 
+						} 
+						if (camera.rotationOffset == 0)
+						{ 
+							sphere.rotation.z=vitesseRotation*time; 
+							sphere.position.x=vitesseTranslation*time+sphere.position.x; 
+						} 
+		      		}
+
+			      	if (keys.right==1){ 
+			      		key_pressed = 2;
+				      	if (camera.rotationOffset == 180)
+						{ 
+							sphere.rotation.z=-vitesseRotation*time; 
+							sphere.position.x=vitesseTranslation*time+sphere.position.x; 
+						}
+						if (camera.rotationOffset == 90)
+						{ 
+							sphere.rotation.x=vitesseRotation*time; 
+							sphere.position.z=vitesseTranslation*time+sphere.position.z; 
+						}
+						if (camera.rotationOffset == 270)
+						{ 
+							sphere.rotation.x=-vitesseRotation*time; 
+							sphere.position.z=-vitesseTranslation*time+sphere.position.z; 
+						}
+						if (camera.rotationOffset == 0)
+						{ 
+							sphere.rotation.z=-vitesseRotation*time; 
+							sphere.position.x=-vitesseTranslation*time+sphere.position.x; 
+						}
+			      	} 
+
+			      	if (keys.up==1){ 
+			      		key_pressed = 3;
+					    if (camera.rotationOffset == 180)
+						{ 
+							sphere.rotation.x=vitesseRotation*time; 
+							sphere.position.z=vitesseTranslation*time+sphere.position.z; 
+						}
+					      if (camera.rotationOffset == 90)
+						{ 
+							sphere.rotation.z=-vitesseRotation*time; 
+							sphere.position.x=-vitesseTranslation*time+sphere.position.x; 
+						}
+					      if (camera.rotationOffset == 270)
+						{ 
+							sphere.rotation.z=vitesseRotation*time; 
+							sphere.position.x=vitesseTranslation*time+sphere.position.x; 
+						}
+					      if (camera.rotationOffset == 0)
+						{ 
+							sphere.rotation.x=-vitesseRotation*time; 
+							sphere.position.z=-vitesseTranslation*time+sphere.position.z; 
+						}
+			      	} 
+
+			    	if (keys.down==1){ 
+			    		key_pressed = 4;
+					    if (camera.rotationOffset == 180)
+						{ 
+							sphere.rotation.x=-vitesseRotation*time; 
+							sphere.position.z=-vitesseTranslation*time+sphere.position.z; 
+						} 
+					      if (camera.rotationOffset == 90)
+						{ 
+							sphere.rotation.z=vitesseRotation*time; 
+							sphere.position.x=vitesseTranslation*time+sphere.position.x; 
+						} 
+					      if (camera.rotationOffset == 270)
+						{ 
+							sphere.rotation.z=-vitesseRotation*time; 
+							sphere.position.x=-vitesseTranslation*time+sphere.position.x; 
+						} 
+					      if (camera.rotationOffset == 0)
+						{ 
+							sphere.rotation.x=vitesseRotation*time; 
+							sphere.position.z=vitesseTranslation*time+sphere.position.z; 
+						} 
+		      		} 
+		      	}
+		      	// Sinon, on verifie le cote de la collision a l'aide du deplacement avant collision
+		      	else
+		      	{
+		      		//Si on a appuye sur gauche, on ne peut plus
+		      		if(key_pressed == 1)
+		      		{
+		      			if (keys.right==1){ 
+
+					      	if (camera.rotationOffset == 180)
+							{ 
+								sphere.rotation.z=-vitesseRotation*time; 
+								sphere.position.x=vitesseTranslation*time+sphere.position.x; 
+							}
+							if (camera.rotationOffset == 90)
+							{ 
+								sphere.rotation.x=vitesseRotation*time; 
+								sphere.position.z=vitesseTranslation*time+sphere.position.z; 
+							}
+							if (camera.rotationOffset == 270)
+							{ 
+								sphere.rotation.x=-vitesseRotation*time; 
+								sphere.position.z=-vitesseTranslation*time+sphere.position.z; 
+							}
+							if (camera.rotationOffset == 0)
+							{ 
+								sphere.rotation.z=-vitesseRotation*time; 
+								sphere.position.x=-vitesseTranslation*time+sphere.position.x; 
+							}
+				      	} 
+
+				      	if (keys.up==1){ 
+
+						    if (camera.rotationOffset == 180)
+							{ 
+								sphere.rotation.x=vitesseRotation*time; 
+								sphere.position.z=vitesseTranslation*time+sphere.position.z; 
+							}
+						      if (camera.rotationOffset == 90)
+							{ 
+								sphere.rotation.z=-vitesseRotation*time; 
+								sphere.position.x=-vitesseTranslation*time+sphere.position.x; 
+							}
+						      if (camera.rotationOffset == 270)
+							{ 
+								sphere.rotation.z=vitesseRotation*time; 
+								sphere.position.x=vitesseTranslation*time+sphere.position.x; 
+							}
+						      if (camera.rotationOffset == 0)
+							{ 
+								sphere.rotation.x=-vitesseRotation*time; 
+								sphere.position.z=-vitesseTranslation*time+sphere.position.z; 
+							}
+				      	} 
+
+				    	if (keys.down==1){ 
+
+						    if (camera.rotationOffset == 180)
+							{ 
+								sphere.rotation.x=-vitesseRotation*time; 
+								sphere.position.z=-vitesseTranslation*time+sphere.position.z; 
+							} 
+						      if (camera.rotationOffset == 90)
+							{ 
+								sphere.rotation.z=vitesseRotation*time; 
+								sphere.position.x=vitesseTranslation*time+sphere.position.x; 
+							} 
+						      if (camera.rotationOffset == 270)
+							{ 
+								sphere.rotation.z=-vitesseRotation*time; 
+								sphere.position.x=-vitesseTranslation*time+sphere.position.x; 
+							} 
+						      if (camera.rotationOffset == 0)
+							{ 
+								sphere.rotation.x=vitesseRotation*time; 
+								sphere.position.z=vitesseTranslation*time+sphere.position.z; 
+							} 
+			      		} 
+			      	}
+
+			      	if (key_pressed == 2)
+			      	{
+			      		if (keys.left==1){ 
+
+							if (camera.rotationOffset == 180)
+							{ 
+								sphere.rotation.z=vitesseRotation*time; 
+								sphere.position.x=-vitesseTranslation*time+sphere.position.x; 
+							} 
+							if (camera.rotationOffset == 90)
+							{ 
+								sphere.rotation.x=-vitesseRotation*time; 
+								sphere.position.z=-vitesseTranslation*time+sphere.position.z; 
+							} 
+							if (camera.rotationOffset == 270)
+							{ 
+								sphere.rotation.x=vitesseRotation*time; 
+								sphere.position.z=vitesseTranslation*time+sphere.position.z; 
+							} 
+							if (camera.rotationOffset == 0)
+							{ 
+								sphere.rotation.z=vitesseRotation*time; 
+								sphere.position.x=vitesseTranslation*time+sphere.position.x; 
+							} 
+			      		}
+
+			      		if (keys.up==1){ 
+
+						    if (camera.rotationOffset == 180)
+							{ 
+								sphere.rotation.x=vitesseRotation*time; 
+								sphere.position.z=vitesseTranslation*time+sphere.position.z; 
+							}
+						      if (camera.rotationOffset == 90)
+							{ 
+								sphere.rotation.z=-vitesseRotation*time; 
+								sphere.position.x=-vitesseTranslation*time+sphere.position.x; 
+							}
+						      if (camera.rotationOffset == 270)
+							{ 
+								sphere.rotation.z=vitesseRotation*time; 
+								sphere.position.x=vitesseTranslation*time+sphere.position.x; 
+							}
+						      if (camera.rotationOffset == 0)
+							{ 
+								sphere.rotation.x=-vitesseRotation*time; 
+								sphere.position.z=-vitesseTranslation*time+sphere.position.z; 
+							}
+				      	} 
+
+				    	if (keys.down==1){ 
+
+						    if (camera.rotationOffset == 180)
+							{ 
+								sphere.rotation.x=-vitesseRotation*time; 
+								sphere.position.z=-vitesseTranslation*time+sphere.position.z; 
+							} 
+						      if (camera.rotationOffset == 90)
+							{ 
+								sphere.rotation.z=vitesseRotation*time; 
+								sphere.position.x=vitesseTranslation*time+sphere.position.x; 
+							} 
+						      if (camera.rotationOffset == 270)
+							{ 
+								sphere.rotation.z=-vitesseRotation*time; 
+								sphere.position.x=-vitesseTranslation*time+sphere.position.x; 
+							} 
+						      if (camera.rotationOffset == 0)
+							{ 
+								sphere.rotation.x=vitesseRotation*time; 
+								sphere.position.z=vitesseTranslation*time+sphere.position.z; 
+							} 
+			      		} 
+			      	}
+
+			      	if (key_pressed == 3)
+			      	{
+			      		if (keys.left==1){ 
+
+							if (camera.rotationOffset == 180)
+							{ 
+								sphere.rotation.z=vitesseRotation*time; 
+								sphere.position.x=-vitesseTranslation*time+sphere.position.x; 
+							} 
+							if (camera.rotationOffset == 90)
+							{ 
+								sphere.rotation.x=-vitesseRotation*time; 
+								sphere.position.z=-vitesseTranslation*time+sphere.position.z; 
+							} 
+							if (camera.rotationOffset == 270)
+							{ 
+								sphere.rotation.x=vitesseRotation*time; 
+								sphere.position.z=vitesseTranslation*time+sphere.position.z; 
+							} 
+							if (camera.rotationOffset == 0)
+							{ 
+								sphere.rotation.z=vitesseRotation*time; 
+								sphere.position.x=vitesseTranslation*time+sphere.position.x; 
+							} 
+			      		}
+
+			      		if (keys.right==1){ 
+
+					      	if (camera.rotationOffset == 180)
+							{ 
+								sphere.rotation.z=-vitesseRotation*time; 
+								sphere.position.x=vitesseTranslation*time+sphere.position.x; 
+							}
+							if (camera.rotationOffset == 90)
+							{ 
+								sphere.rotation.x=vitesseRotation*time; 
+								sphere.position.z=vitesseTranslation*time+sphere.position.z; 
+							}
+							if (camera.rotationOffset == 270)
+							{ 
+								sphere.rotation.x=-vitesseRotation*time; 
+								sphere.position.z=-vitesseTranslation*time+sphere.position.z; 
+							}
+							if (camera.rotationOffset == 0)
+							{ 
+								sphere.rotation.z=-vitesseRotation*time; 
+								sphere.position.x=-vitesseTranslation*time+sphere.position.x; 
+							}
+				      	} 
+
+				      	if (keys.down==1){ 
+
+						    if (camera.rotationOffset == 180)
+							{ 
+								sphere.rotation.x=-vitesseRotation*time; 
+								sphere.position.z=-vitesseTranslation*time+sphere.position.z; 
+							} 
+						      if (camera.rotationOffset == 90)
+							{ 
+								sphere.rotation.z=vitesseRotation*time; 
+								sphere.position.x=vitesseTranslation*time+sphere.position.x; 
+							} 
+						      if (camera.rotationOffset == 270)
+							{ 
+								sphere.rotation.z=-vitesseRotation*time; 
+								sphere.position.x=-vitesseTranslation*time+sphere.position.x; 
+							} 
+						      if (camera.rotationOffset == 0)
+							{ 
+								sphere.rotation.x=vitesseRotation*time; 
+								sphere.position.z=vitesseTranslation*time+sphere.position.z; 
+							} 
+			      		} 
+			      	}
+
+			      	if (key_pressed == 4)
+			      	{
+			      		if (keys.left==1){ 
+
+							if (camera.rotationOffset == 180)
+							{ 
+								sphere.rotation.z=vitesseRotation*time; 
+								sphere.position.x=-vitesseTranslation*time+sphere.position.x; 
+							} 
+							if (camera.rotationOffset == 90)
+							{ 
+								sphere.rotation.x=-vitesseRotation*time; 
+								sphere.position.z=-vitesseTranslation*time+sphere.position.z; 
+							} 
+							if (camera.rotationOffset == 270)
+							{ 
+								sphere.rotation.x=vitesseRotation*time; 
+								sphere.position.z=vitesseTranslation*time+sphere.position.z; 
+							} 
+							if (camera.rotationOffset == 0)
+							{ 
+								sphere.rotation.z=vitesseRotation*time; 
+								sphere.position.x=vitesseTranslation*time+sphere.position.x; 
+							} 
+			      		}
+
+			      		if (keys.right==1){ 
+
+					      	if (camera.rotationOffset == 180)
+							{ 
+								sphere.rotation.z=-vitesseRotation*time; 
+								sphere.position.x=vitesseTranslation*time+sphere.position.x; 
+							}
+							if (camera.rotationOffset == 90)
+							{ 
+								sphere.rotation.x=vitesseRotation*time; 
+								sphere.position.z=vitesseTranslation*time+sphere.position.z; 
+							}
+							if (camera.rotationOffset == 270)
+							{ 
+								sphere.rotation.x=-vitesseRotation*time; 
+								sphere.position.z=-vitesseTranslation*time+sphere.position.z; 
+							}
+							if (camera.rotationOffset == 0)
+							{ 
+								sphere.rotation.z=-vitesseRotation*time; 
+								sphere.position.x=-vitesseTranslation*time+sphere.position.x; 
+							}
+				      	} 
+
+				      	if (keys.up==1){ 
+
+						    if (camera.rotationOffset == 180)
+							{ 
+								sphere.rotation.x=vitesseRotation*time; 
+								sphere.position.z=vitesseTranslation*time+sphere.position.z; 
+							}
+						      if (camera.rotationOffset == 90)
+							{ 
+								sphere.rotation.z=-vitesseRotation*time; 
+								sphere.position.x=-vitesseTranslation*time+sphere.position.x; 
+							}
+						      if (camera.rotationOffset == 270)
+							{ 
+								sphere.rotation.z=vitesseRotation*time; 
+								sphere.position.x=vitesseTranslation*time+sphere.position.x; 
+							}
+						      if (camera.rotationOffset == 0)
+							{ 
+								sphere.rotation.x=-vitesseRotation*time; 
+								sphere.position.z=-vitesseTranslation*time+sphere.position.z; 
+							}
+				      	} 
+			      	}
+		      	}
+
+				if (time > 40){
+					time = 30;
+		    	}
+		    }); 
+
+	    
+		    
+	 // Tourne la camera de 90 ° si on clique sur la souris       
+	        window.addEventListener('click',function(event){
+				var pickResult=scene.pick(event.clientX, event.clientY);
+				if (pickResult.hit){
+			  		if(camera.rotationOffset == 270)
+			      		camera.rotationOffset = 0;
+			  		else
+			      		camera.rotationOffset += 90;		    
+				}
+			}); 
+		
+
+
+        return scene;
+        
+        };
+        
+        var scene = createScene();
+
+        //Ces lignes "obligent" BabylonJS à effectuer certains calculs avant le rendu de la première image
+        /*sphere.computeWorldMatrix(true);
+		box1.computeWorldMatrix(true);
+		box2.computeWorldMatrix(true);
+		box3.computeWorldMatrix(true);
+		box4.computeWorldMatrix(true);
+		ground.computeWorldMatrix(true);*/
+
+        engine.runRenderLoop(function () {
+            scene.render();
+        });
+
+        // Resize
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>
