@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<title>Babylon.js sample code</title>
+<!-- Babylon.js -->
+<script src="http://www.babylonjs.com/hand.minified-1.2.js"></script>
+<script src="http://www.babylonjs.com/cannon.js"></script>
+<script src="http://www.babylonjs.com/oimo.js"></script>
+<script src="http://www.babylonjs.com/babylon.js"></script>
+<script src="babylon.objFileLoader.js"></script>
+<style>
+html, body {
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#renderCanvas {
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+</style>
+</head>
+<body>
+<canvas id="renderCanvas"></canvas>
+<script>
+var canvas = document.getElementById("renderCanvas");
+var engine = new BABYLON.Engine(canvas, true);
+
+var createScene = function () {
+
+  // This creates a basic Babylon Scene object (non-mesh)
+  var scene = new BABYLON.Scene(engine);
+  scene.enablePhysics(new BABYLON.Vector3(0, -10, 0), new BABYLON.OimoJSPlugin());
+
+  // This creates and positions a free camera (non-mesh)
+  var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, 40), scene);
+
+
+  // This targets the camera to scene origin
+  camera.setTarget(BABYLON.Vector3.Zero());
+
+  // This attaches the camera to the canvas
+  camera.attachControl(canvas, true);
+
+  // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
+  var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
+
+  // Default intensity is 1. Let's dim the light a small amount
+  light.intensity = 0.7;
+
+  // Our built-in 'sphere' shape. Params: name, subdivs, size, scene
+  var sphere = BABYLON.Mesh.CreateSphere("sphere1", 32, 2, scene);
+
+  // Move the sphere upward 1/2 its height
+  sphere.position.y = 1;
+  sphere.position.z = 30;
+
+  // Our built-in 'ground' shape. Params: name, width, depth, subdivs, scene
+  var ground = BABYLON.Mesh.CreateGround("ground1", 8, 64, 2, scene);
+
+  //Creation of a material with translated texture
+  var materialBall = new BABYLON.StandardMaterial("texture", scene);
+  materialBall.diffuseTexture = new BABYLON.Texture("./textures/ball_texture.png", scene);
+  materialBall.diffuseTexture.vOffset = 0.5;//Vertical offset of 10%
+  //materialBall.diffuseTexture.uOffset = 0.4;//Horizontal offset of 40%
+  sphere.material = materialBall;
+
+  var materialLane = new BABYLON.StandardMaterial("texture2",scene);
+  materialLane.diffuseTexture = new BABYLON.Texture("./textures/bowling_lane.png",scene);
+  ground.material = materialLane;
+
+  var nonLane = BABYLON.Mesh.CreateGround("ground2", 20, 10, 2, scene);
+  var materialNonLane = new BABYLON.StandardMaterial("texture4",scene);
+  materialNonLane.diffuseTexture = new BABYLON.Texture("./textures/floor.jpg",scene);
+  nonLane.material = materialNonLane;
+
+  nonLane.position.z = 37;
+
+  var pins=[];
+  var pins_score=[];
+
+  for(i=0;i<10;i++)
+    {
+    pins[i] = BABYLON.Mesh.CreateCylinder("pin",2, 0.7, 0.7, 6, 6, scene);        
+    pins[i].position.y = 1;
+    pins_score[i]=0;
+    }
+
+  pins[0].position.x = 0; pins[0].position.z = -10;
+
+  pins[1].position.x = 1; pins[1].position.z = -12;
+  pins[2].position.x = -1; pins[2].position.z = -12;
+
+  pins[3].position.x = 2; pins[3].position.z = -14;
+  pins[4].position.x = 0; pins[4].position.z = -14;
+  pins[5].position.x = -2; pins[5].position.z = -14;
+
+  pins[6].position.x = 3; pins[6].position.z = -16;
+  pins[7].position.x = 1; pins[7].position.z = -16;
+  pins[8].position.x = -1; pins[8].position.z = -16;
+  pins[9].position.x = -3; pins[9].position.z = -16;
+
+
+  var materialPin = new BABYLON.StandardMaterial("texture2",scene);
+  materialPin.diffuseTexture = new BABYLON.Texture("./textures/pin_texture.png",scene);
+
+  for(i=0;i<10;i++)
+    {
+    pins[i].material = materialPin;
+    }
+
+  var leftBarrier = BABYLON.Mesh.CreateCylinder("leftBarrier",64,2,2,32,32,scene);
+  leftBarrier.rotation.x = Math.PI/2;
+  leftBarrier.position.x = 4.5;
+
+  var rightBarrier = BABYLON.Mesh.CreateCylinder("rightBarrier",64,2,2,32,32,scene);
+  rightBarrier.rotation.x = Math.PI/2;
+  rightBarrier.position.x = -4.5;
+
+  var materialBarrier = new BABYLON.StandardMaterial("texture3",scene);
+  materialBarrier.diffuseTexture = new BABYLON.Texture("./textures/barrier.png",scene);
+  leftBarrier.material = materialBarrier;
+  rightBarrier.material = materialBarrier;
+
+  var backLane = BABYLON.Mesh.CreateGround("ground3", 10, 10, 2, scene);
+  backLane.rotation.x = Math.PI/2;
+  backLane.position.z = -32;
+  var materialBack = new BABYLON.StandardMaterial("texture5",scene);
+  materialBack.diffuseTexture = new BABYLON.Texture("./textures/back.png",scene);
+  backLane.material = materialBack;
+
+
+
+
+
+
+  //activation de la physique
+  for(i=0;i<10;i++)
+    {	     
+    pins[i].setPhysicsState({
+impostor: BABYLON.PhysicsEngine.BoxImpostor,
+mass: 10,
+friction: 1,
+restitution: 0
+});
+}
+
+ground.setPhysicsState({
+impostor: BABYLON.PhysicsEngine.BoxImpostor,
+mass: 0,
+friction: 1,
+restitution: 0
+});
+sphere.setPhysicsState({
+impostor: BABYLON.PhysicsEngine.BoxImpostor,
+mass: 100,
+friction: 1,
+restitution: 0
+});
+leftBarrier.setPhysicsState({
+impostor: BABYLON.PhysicsEngine.BoxImpostor,
+mass: 0,
+friction: 1,
+restitution: 0
+});
+rightBarrier.setPhysicsState({
+impostor: BABYLON.PhysicsEngine.BoxImpostor,
+mass: 0,
+friction: 1,
+restitution: 0
+});
+
+//sphere.applyImpulse(new BABYLON.Vector3(0, 0, -100), sphere.getAbsolutePosition());
+
+
+// 	    scene.registerBeforeRender(function () {
+// 	    sphere.moveWithCollisions(sphere_speed);
+// 	     });
+// 	     
+// 	      scene.onPointerDown = function(evt) {
+// 	      sphere.position=
+// 	      sphere.applyImpulse(new BABYLON.Vector3(0, 0, -0.5), new BABYLON.Vector3(0, 0, 0));
+//     };
+scene.onPointerDown = function (evt, pickResult) {
+  // if the click hits the ground object, we change the impact position
+  if (pickResult.hit) {
+    //on calcul le score
+
+    if(sphere.position.z > 20)
+      {
+
+      sphere.applyImpulse(new BABYLON.Vector3(pickResult.pickedPoint.x, pickResult.pickedPoint.y, -50), sphere.getAbsolutePosition());
+
+      }
+    else
+      {
+      sphere.physicsImpostor.setLinearVelocity(new BABYLON.Vector3(0, 0, 0));
+      sphere.physicsImpostor.setAngularVelocity(new BABYLON.Vector3(0, 0, 0));
+      sphere.position.x = 0;
+      sphere.position.y = 1;
+      sphere.position.z = 30;
+      var sum=0;
+      //calcul du score
+      for(i=0;i<10;i++)
+        {
+        //on transforme les quaternions en angles dans le repere monde
+        var angles=pins[i].rotationQuaternion.toEulerAngles();
+        if(angles.z>Math.PI/4||angles.z<-Math.PI/4||angles.x>Math.PI/4||angles.x<-Math.PI/4||pins[i].getAbsolutePosition().y<0)//si la quille est couchée ou plus sur la piste
+          {
+          pins_score[i]=1;
+          }
+        sum=sum+pins_score[i];
+
+        }
+
+      if(sum==10)
+        {
+        window.alert("You win");
+        }
+
+      }
+  }
+};
+
+
+
+
+
+//var pin_1;
+//BABYLON.SceneLoader.ImportMesh(pin_1,"./obj/","pin.obj",scene);
+//var pin_2 = BABYLON.SceneLoader.ImportMesh("","./obj/","pin.obj",scene);
+
+//var assetsManager = new BABYLON.AssetsManager(scene);
+//var meshTask = assetsManager.addMeshTask("pin task","","./obj/","pin.obj");
+//meshTask.onSuccess = function(task){
+//  task.loadedMeshes[0].position = new BABYLON.Vector3(10, 1, 1);
+//}
+//assetsManager.load();
+
+return scene;
+
+};
+
+var scene = createScene();
+
+engine.runRenderLoop(function () {
+
+                     scene.render();
+
+                     });
+
+// Resize
+window.addEventListener("resize", function () {
+                        engine.resize();
+                        });
+</script>
+</body>
+</html>

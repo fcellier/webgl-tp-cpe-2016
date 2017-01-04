@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html" charset="utf-8"/>
+    <title>WebGL Project</title>
+    
+
+    <script src="babylon.2.4.js"></script>
+    <style>
+        html, body {
+            overflow: hidden;
+            width   : 100%;
+            height  : 100%;
+            margin  : 0;
+            padding : 0;
+        }
+
+        #renderCanvas {
+            width   : 100%;
+            height  : 100%;
+            touch-action: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <script>
+    
+
+		
+////////////////////////////////////////////////////////////////////////////////////////////////
+// Global variables
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+        window.addEventListener('DOMContentLoaded', function(){
+            // get the canvas DOM element
+            var canvas = document.getElementById('renderCanvas');
+
+            // load the 3D engine
+            var engine = new BABYLON.Engine(canvas, true);
+            
+            //Ball radius (used throughout the program so we need to initialize it here)
+            
+            var rayon = 0.5; //spheres radius
+            var frame_number = 0; //number of frames since the start
+            var i = 1.1; //speed multiplier when bouncing on the edges
+            var compteur_coups = 0; //the number of hits
+            
+            var filter = 0; //Filter for keyboard management
+            var currentlyPressedKeys = {}; //Keys pressed
+            
+            var particules = 0;
+            
+/////////////////////////////////////////////////////////////////////////////////////////////
+// Controls display
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+// function which adds the controls on the screen (text 2D)
+		var create = function (scene) {
+		    var canvas = new BABYLON.ScreenSpaceCanvas2D(scene, {
+		        id: "BilliardControls",
+		        size: new BABYLON.Size(500, 100),
+		        backgroundFill: "#4040408F",
+		        backgroundRoundRadius: 50,
+		        children: [
+		            new BABYLON.Text2D("Use the mouse to control the camera \n Press z to charge and release to strike", {
+		                id: "text_controls",
+		                marginAlignment: "h: center, v:center",
+		                fontName: "14pt Arial",
+		            })
+		        ]
+		    });
+		    return canvas;
+		};
+            
+//////////////////////////////////////////////////////////////////////////////////////////////
+// Fonction CreateScene 
+//////////////////////////////////////////////////////////////////////////////////////////////
+            
+            var createScene = function(){
+            
+             var scene = new BABYLON.Scene(engine);
+             
+             scene.ambientColor = new BABYLON.Color3(0.3, 0.3, 0.3);
+		scene.clearColor = new BABYLON.Color3(0.4, 0.5, 0.6); // background color
+		
+                
+                //Camera initialisation
+    
+		var camera = new BABYLON.ArcRotateCamera("Camera", -Math.PI/2, Math.PI/3, 15, BABYLON.Vector3.Zero(), scene); //creates the camera
+               
+
+                // target the camera to scene origin
+                camera.setTarget(BABYLON.Vector3.Zero());
+
+                // attach the camera to the canvas
+                camera.attachControl(canvas, false);
+
+                // create a basic light, aiming 0,1,0 - meaning, to the sky
+                var light = new BABYLON.HemisphericLight('light1', new BABYLON.Vector3(0,1,0), scene);
+                
+
+    // Material
+     // Create the billiard table
+                var table = BABYLON.Mesh.CreateGround('table', 6, 12, 2, scene);
+                
+                // Material of the billiard table
+		var material_table = new BABYLON.StandardMaterial("material_table", scene);
+		table.material = material_table;
+		material_table.diffuseTexture = new BABYLON.Texture("texture_billard.png", scene);
+		
+    // Create the 4 edges of the table
+		var left_edge = BABYLON.Mesh.CreateBox("left_edge", 12, scene);
+		var right_edge = BABYLON.Mesh.CreateBox("right_edge", 12, scene);
+		var front_edge = BABYLON.Mesh.CreateBox("front_edge", 6, scene);
+		var back_edge = BABYLON.Mesh.CreateBox("back_edge", 6, scene);
+
+				
+		// Positions of the 4 edges
+		left_edge.scaling.x = 0.01; left_edge.scaling.y = 0.05; 
+		left_edge.position.x = -3;
+		
+		right_edge.scaling.x = 0.01; right_edge.scaling.y = 0.05; 
+		right_edge.position.x = 3;
+		
+		front_edge.scaling.z = 0.01; front_edge.scaling.y = 0.1; 
+		front_edge.position.z = -6;
+		
+		back_edge.scaling.z = 0.01; back_edge.scaling.y = 0.1;  // ok
+		back_edge.position.z = 6;
+		
+		// Material of the edges
+		var material_cue = new BABYLON.StandardMaterial("material_cue", scene);
+		
+		left_edge.material = material_cue; right_edge.material = material_cue;
+		back_edge.material = material_cue; front_edge.material = material_cue;
+		
+		material_cue.diffuseTexture = new BABYLON.Texture("wood.png", scene);
+		
+		scene.registerBeforeRender(function () {
+                    //Makes the cue follow to the white ball while looking at the camera
+                    cue.lookAt( new BABYLON.Vector3(30*camera.position.x,2,30*camera.position.z),0,-Math.PI/2);
+                    cue.position = new BABYLON.Vector3(ball.position.x+2*Math.cos(camera.alpha), ball.position.y,ball.position.z+2*Math.sin(camera.alpha));
+		})
+		
+		create(scene); // add game information (controls)
+
+    
+    
+      return scene;
+            
+            }
+            
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Initialisation des objets pouvant entrer en collision
+///////////////////////////////////////////////////////////////////////////////////////////////
+    
+    // call the createScene function
+            var scene = createScene();
+            
+    
+    
+    // Cue initialisation
+            
+            // Create the cue (queue de billard)
+		cue = BABYLON.Mesh.CreateCylinder("cue", 3, 0.1, 0.1, 16, scene); 
+		
+		// Material of the cue
+		var material_cue = new BABYLON.StandardMaterial("material_cue", scene);
+		cue.material = material_cue;
+		material_cue.diffuseTexture = new BABYLON.Texture("wood.png", scene);
+  
+            // Cue control
+                    var xpos = -0.0;
+                    var zpos = -7.2; //Initial position of the cue
+                    
+            // Initialization of the cue 
+            
+            cue.position = new BABYLON.Vector3(xpos, 1.2, zpos);
+                    
+    // Balls initialisation
+    
+    // White ball
+    
+    //Initial position of the white ball
+    var pos1x = 0.0;
+    var pos1y = rayon/2;
+    var pos1z = -5;
+    
+    //Initial speed of the white ball
+    var vitx = 0.0;
+    var vitz = 0.0;
+    
+    //Initial color of the white ball
+    var color = 1.0;
+    
+    var charge = 0.0; //The player can control the power of his or her strike with this
+    var speed_modif = 1.0; //Speed modifier for collisions
+    
+    
+    //Create the ball
+    var ball = BABYLON.Mesh.CreateSphere("ball", 16, rayon, scene);
+    
+    //The material of the ball
+    var material_ball = new BABYLON.StandardMaterial("material_ball", scene);
+    
+    //Setting the ball to its initial position
+    ball.position = new BABYLON.Vector3(pos1x,pos1y,pos1z);
+    
+    //Create white ball particule system
+    var particleSystem = new BABYLON.ParticleSystem("particles", 2000, scene);
+    
+    //Texture of each particle
+    particleSystem.particleTexture = new BABYLON.Texture("flare.png", scene);
+    
+    // Where the particles come from
+    particleSystem.emitter = ball; // the starting object, the emitter
+    //particleSystem.minEmitBox = ball.position; // Starting all from
+    //particleSystem.maxEmitBox = ball.position; // To...
+    
+    // Size of each particle (random between...
+    particleSystem.minSize = 0.1;
+    particleSystem.maxSize = 0.5;
+
+    // Life time of each particle (random between...
+    particleSystem.minLifeTime = 0.05;
+    particleSystem.maxLifeTime = 0.5;
+
+    // Emission rate
+    particleSystem.emitRate = 0;
+    
+    // Set the gravity of all particles
+    particleSystem.gravity = new BABYLON.Vector3(0, -9.81, 0);
+    
+    // Direction of each particle after it has been emitted
+    particleSystem.direction1 = new BABYLON.Vector3(-10, 5, -10);
+    particleSystem.direction2 = new BABYLON.Vector3(10, 5, 10);
+    
+    // Angular speed, in radians
+    particleSystem.minAngularSpeed = 0;
+    particleSystem.maxAngularSpeed = Math.PI;
+    
+    // Speed
+    particleSystem.minEmitPower = 0.5;
+    particleSystem.maxEmitPower = 5;
+    particleSystem.updateSpeed = 0.005;
+    
+    // Start the particle system
+    particleSystem.start();
+    
+    // Target
+        
+        //Initial position of the target
+        var pos_ball1x = 0.0;
+        var pos_ball1y = rayon/2;
+        var pos_ball1z = 3;
+        
+        //Initial speed of the target
+        var vit1x = 0.0;
+        var vit1z = 0.0;
+        
+        // Create the target
+		sphere1 = BABYLON.Mesh.CreateSphere('sphere1', 16, rayon, scene); 
+
+		// Color of the sphere
+		var material_sphere1 = new BABYLON.StandardMaterial("material_sphere1", scene);
+		material_sphere1.diffuseColor = new BABYLON.Color3(1, 0, 0); sphere1.material = material_sphere1; 
+
+                //Setting the target to its initial position
+                sphere1.position = new BABYLON.Vector3(pos_ball1x,pos_ball1y,pos_ball1z); 
+                
+                
+	//Holes
+	
+	// Create the holes of the billiard table
+		hole1 = BABYLON.Mesh.CreateCylinder("hole1", 0.001, 3*rayon, 3*rayon, 16, scene); hole2 = BABYLON.Mesh.CreateCylinder("hole2", 0.001, 3*rayon, 3*rayon, 16, scene);
+		hole3 = BABYLON.Mesh.CreateCylinder("hole3", 0.001, 3*rayon, 3*rayon, 16, scene); hole4 = BABYLON.Mesh.CreateCylinder("hole4", 0.001, 3*rayon, 3*rayon, 16, scene);
+		
+		// Color of the holes = color of the background
+		var material_hole = new BABYLON.StandardMaterial("material_hole", scene);
+		material_hole.diffuseColor = new BABYLON.Color3(0.4, 0.5, 0.6);
+		
+		hole1.material = material_hole; hole2.material = material_hole;
+		hole3.material = material_hole; hole4.material = material_hole;
+		
+		material_hole.specularColor = new BABYLON.Color3(0, 0, 0);
+
+		// Positions of the holes
+		hole1.position.x = 3; hole1.position.z = 6;
+		hole2.position.x = 3; hole2.position.z = -6;
+		hole3.position.x = -3; hole3.position.z = 6;
+		hole4.position.x = -3; hole4.position.z = -6;
+
+
+    //Collisions (this function is called at every frame
+    
+    scene.registerBeforeRender(function () {
+
+        //Balloon 1 intersection
+        
+        if (ball.intersectsMesh(sphere1, true) && frame_number > 5) //The second condition is only here to avoid a bug
+        {
+            //Increasing speed of both balls according to their relative positions
+            var depl_h = (ball.position.x - sphere1.position.x);
+            var depl_v = (ball.position.z - sphere1.position.z); 
+            vitx = (depl_h/4)*speed_modif;
+            vitz = (depl_v/4)*speed_modif;
+            vit1x = -(depl_h/4)*speed_modif;
+            vit1z = -(depl_v/4)*speed_modif;
+            //makes the particle system throwing particules on impact
+            particules = 5000*speed_modif;
+        }
+            
+        //Changing the color of the white ball
+        material_ball.diffuseColor = new BABYLON.Color3(1, color, color); 
+        ball.material = material_ball;
+        
+        //Generate particles according to the value of the particules variable
+        particleSystem.emitRate = particules;
+        
+        //Replacing the white ball according to its current speed
+        pos1x += vitx;
+        pos1z += vitz;
+        ball.position = new BABYLON.Vector3(pos1x, pos1y, pos1z);
+        
+        //Same for the target ball
+        pos_ball1x += vit1x;
+        pos_ball1z += vit1z;
+        sphere1.position = new BABYLON.Vector3(pos_ball1x, pos_ball1y, pos_ball1z);
+        
+        //Holes intersection
+        
+        if ((ball.intersectsMesh(hole1, true) || ball.intersectsMesh(hole2, true) || ball.intersectsMesh(hole3, true) || ball.intersectsMesh(hole4, true)) && frame_number > 5)
+        {   
+            //if the white ball reaches a hole, destroys it and the cue and displays an end-game window
+            ball.dispose();
+            cue.dispose();
+            
+            var canvas = new BABYLON.ScreenSpaceCanvas2D(scene, {
+		        id: "BilliardControls",
+		        size: new BABYLON.Size(500, 100),
+		        backgroundFill: "#4040408F",
+		        backgroundRoundRadius: 50,
+		        children: [
+		            new BABYLON.Text2D("You lose ! \n ", {
+		                id: "text_controls",
+		                marginAlignment: "h: center, v:center",
+		                fontName: "14pt Arial",
+		            })
+		        ]
+		    });
+		    return canvas;
+		    
+        }
+        
+        if ((sphere1.intersectsMesh(hole1, true) || sphere1.intersectsMesh(hole2, true) || sphere1.intersectsMesh(hole3, true) || sphere1.intersectsMesh(hole4, true)) && frame_number > 5)
+        {   
+            //If the target reaches a hole, destroys it and displays another end-game window
+            sphere1.dispose();
+            cue.dispose();
+            
+            var canvas = new BABYLON.ScreenSpaceCanvas2D(scene, {
+		        id: "BilliardControls",
+		        size: new BABYLON.Size(500, 100),
+		        backgroundFill: "#4040408F",
+		        backgroundRoundRadius: 50,
+		        children: [
+		            new BABYLON.Text2D("You win !\n Hits : " + compteur_coups , {
+		                id: "text_controls",
+		                marginAlignment: "h: center, v:center",
+		                fontName: "14pt Arial",
+		            })
+		        ]
+		    });
+		    return canvas;
+		    
+        }
+
+        
+    });
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+//runRenderLoop function (called at every frame)
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+            // run the render loop
+            engine.runRenderLoop(function(){
+            
+            //creation of a keyboard array
+        
+		document.onkeydown = handleKeyDown;
+		document.onkeyup = handleKeyUp;
+		
+		//When a key is pressed, its value in the array becomes "true"
+		function handleKeyDown(event) {
+		  currentlyPressedKeys[event.keyCode] = true;
+		  
+
+		  if (String.fromCharCode(event.keyCode) == "F") {
+		    filter += 1;
+		    if (filter == 3) {
+		      filter = 0;
+		    }
+		  }
+		}
+		
+		
+                //When it is released, it becomes "false"
+		function handleKeyUp(event) {
+		  currentlyPressedKeys[event.keyCode] = false;
+		}
+		
+		
+		//Press z to charge and release to strike
+		function handleKeys() {
+		
+		  //if the key pressed is z
+		  if (currentlyPressedKeys[90] && charge < 1) {
+		    charge += 0.01; //The charge variable increases
+		    color -= 0.02; //The ball turns to red
+		    speed_modif += 0.1; //The collisions with the target will increase speed more
+		  }
+		  else //When the key is not pressed
+		  {
+		  //Increase speed of the ball according to its charge value
+		  vitx += (ball.position.x - cue.position.x)*charge;
+		    vitz += (ball.position.z - cue.position.z)*charge;
+
+		    //Add one hit on counter if the touch just has been released
+		    if (charge != 0)
+		    {
+                        compteur_coups ++;
+                    }
+                    
+                    //Reset charge value
+		    charge = 0; 
+		    
+		    //decrease the impact multiplier over time
+		    if(speed_modif > 1.0)
+		    {
+                        speed_modif -= 0.05;
+                    }
+		  }
+		  
+		   
+		  
+		}
+		  
+		handleKeys();
+		
+                
+                //Decrease speed over time (simulates dampness)
+                vitx = vitx*0.95;
+                vitz = vitz*0.95;
+                
+                vit1x = vit1x*0.95;
+                vit1z = vit1z*0.95;
+                
+                //Turn gradually the ball white over time
+                
+                if (color < 1.0)
+                {
+                color += 0.01;
+                }
+                
+                //resets the particle system gradually
+                if (particules > 0)
+                {
+                    particules =0;
+                }
+                
+                //increments frame counter each frame
+                frame_number ++;
+                
+                
+                //Collisions with the edges : when the x and z values are too high, we reverse x or z speed 
+                //and put the balls back within the bounds.
+                //i is a multiplier that allows to increase speed when bouncing
+                
+                //For the white ball
+                
+                if (ball.position.x - rayon < -3)
+                    {
+                        vitx = -vitx*i;
+                        ball.position.x = -3 + rayon;
+                    }
+                    
+                if (ball.position.x + rayon > 3 )
+                    {
+                        vitx = -vitx*i;
+                        ball.position.x = 3 - rayon;
+                    }
+                
+                if (ball.position.z -rayon < -6 )
+                    {
+                        vitz = -vitz*i;
+                        ball.position.z = -6 + rayon;
+                    }
+                
+                if (ball.position.z + rayon > 6 )
+                    {
+                        vitz = -vitz*i;
+                        ball.position.z = 6 - rayon;
+                    }
+                    
+                    
+                //for the target
+                    
+                if (sphere1.position.x - rayon < -3 )
+                    {
+                        vit1x = -vit1x*i;
+                        sphere1.position.x = -3 + rayon;
+                    }
+                    
+                if (sphere1.position.x + rayon > 3 )
+                    {
+                        vit1x = -vit1x*i;
+                        sphere1.position.x = 3 - rayon;
+                    }
+                    
+                if (sphere1.position.z - rayon < -6 )
+                    {
+                        vit1z = -vit1z*i;
+                        sphere1.position.z = -6 + rayon;
+                    }
+                    
+                if (sphere1.position.z + rayon > 6 )
+                    {
+                        vit1z = -vit1z*i;
+                        sphere1.position.z = 6 - rayon;
+                    }
+
+                //render the scene
+                scene.render();
+                
+            });
+
+            // the canvas/window resize event handler
+            window.addEventListener('resize', function(){
+                engine.resize();
+            });
+        });
+    </script>
+</body>
+</html>
